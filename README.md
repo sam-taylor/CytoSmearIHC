@@ -7,13 +7,12 @@ Varghese F, Bukhari AB, Malhotra R, De A (2014) IHC Profiler: An Open Source Plu
 
 ### Prerequisites
 
-Install [ImageJ](https://imagej.net), or have an existing installation of ImageJ available.
+Install [Fiji](https://fiji.sc/), or have an existing installation of Fiji available.
 
 ### Install
 
-* Copy the `IHC_Profiler.class` file to the folder `<ImageJ folder>/plugins`
-* Copy the `IHC_Profiler.txt` file to the folder `<ImageJ folder>/macros`
+* Copy the `CytoSmearIHC.txt` file to the folder `<ImageJ folder>/macros`
 * Restart ImageJ if it was already running
-* You should now see an item called "IHC Profiler" in the Plugins menu.
+* You should now see an item called "CytoSmearIHC" in the macros menu. If not, install the .txt using the install option in the macros tab.
 
 

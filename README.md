@@ -1,2 +1,2 @@
 # CytoSmearIHC
-A tool to quantify immunohistochemistry staining in whole-slide scanned cell smears.
+An ImageJ tool to quantify immunohistochemistry staining in whole-slide scanned cell smears.

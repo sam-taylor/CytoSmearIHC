@@ -13,6 +13,6 @@ Install [Fiji](https://fiji.sc/), or have an existing installation of Fiji avail
 
 * Copy the `CytoSmearIHC.txt` file to the folder `<ImageJ folder>/macros`
 * Restart ImageJ if it was already running
-* You should now see an item called "CytoSmearIHC" in the macros menu. If not, install the .txt using the install option in the macros tab.
+* You should now see an item called "CytoSmearIHC" in the macros menu. If not, install the .txt using the install option in the macros menu.
 
 

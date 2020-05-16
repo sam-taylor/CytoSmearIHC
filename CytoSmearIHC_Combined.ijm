@@ -1,19 +1,35 @@
-/*
+/* CytoSmearIHC
+ * by Samuel Taylor
+ * Weill Cornell Medical College
+ * Tri-Institutional MD-PhD Program
+ * 
  * Macro to process a folder of scanned .svs files 
  * and output a quantification of the IHC staining in a separate
  * folder. The macro is optimized for whole-slide images scanned
  * at 40X magnification. Different magnifications can be used by
  * making modifications to the Bio-Formats Importer instructions.
  * for files starting at low magnification, for example, change
- * "series_3" to "series_2" or "series_1".
- * 
- * This macro relies on the macro "CytoSmearIHC," which also 
- * needs to be installed in the macros folder of ImageJ.
+ * "series_3" to "series_2" or "series_1". "series_6" refers to
+ * the scanned slide label--adjust this command as needed.
  * 
  * Output files include a PNG of the total DAB-positive pixels 
  * from the original image, a PNG of the area included in the
  * quantification, a PNG of the quantification histogram, and a
- * .csv file containing the histogram data.
+ * tab-delimited text file with statistics for all images 
+ * analyzed.
+ * 
+ * This macro employs code from the following sources:
+ * 
+ * "CustomTabStatFromResults"
+ * by Gilles Carpentier
+ * Faculte des Sciences et Technologies,
+ * Universite Paris 12 Val de Marne, France.
+ * 
+ * Varghese F, Bukhari AB, Malhotra R, De A (2014) IHC Profiler: 
+ * An Open Source Plugin for the Quantitative Evaluation and 
+ * Automated Scoring of Immunohistochemistry Images of Human 
+ * Tissue Samples. PLoS ONE 9(5): e96801. 
+ * https://doi.org/10.1371/journal.pone.0096801
  */
 
 #@ File (label = "Input directory", style = "directory") input
@@ -37,6 +53,7 @@ var x = 0.025, y = 0.1;
 
 setBatchMode(true); //batch mode on
 processFolder(input);
+saveTable();
 setBatchMode(false); //exit batch mode
 
 // function to scan folders/subfolders/files to find files with correct suffix
@@ -57,6 +74,7 @@ function processFile(input, output, file) {
 	print(file);
 	theFile = "open=[" + input + File.separator + file + "]";
 	run("Bio-Formats Importer", theFile +  " autoscale color_mode=Default rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_3 series_6");
+	//save the series_6 image as the label
 	saveAs("PNG",  output + File.separator + file + "_Label.png");
 	close();
 	run("Stack to RGB");
@@ -65,6 +83,7 @@ function processFile(input, output, file) {
   	getDimensions(w, h, channels, slices, frames);
 	makeRectangle(w/4, h/4, w/2, h/2);
 	run("Crop");
+	//save the cropped image as the input
 	saveAs("PNG",  output + File.separator + file + "_Input.png");
 	cropped = getImageID();
 
@@ -80,14 +99,14 @@ function processFile(input, output, file) {
 	run("Analyze Particles...", "size=" + cellSize + " show=Masks display clear include record ");
 	if (! isOpen("Results")) {exit ("No Results table")}
 	makeStatFromResults_AP ();
-	//print(meanObject);
 	nCells = nResults();
 	run("Close");
 
 	//now need to select the area decided as cells
 	setAutoThreshold("Default");
 	setThreshold(50, 255);//these values should always capture the particles
-	//saveAs("PNG",  output + File.separator + file + "_Included.png");
+	//this image reflects the area to be analyzed
+	saveAs("PNG",  output + File.separator + file + "_Included.png");
 	run("Create Selection");
 	
 	//the non-background, non-clumped analysis area is applied to the DAB channel
@@ -96,25 +115,31 @@ function processFile(input, output, file) {
 	run("Colour Deconvolution", "vectors=[H DAB]");
 	close();
 	run("Restore Selection");
+	//this is the total DAB image
 	saveAs("PNG",  output + File.separator + file + "_TotalDAB.png");
 
 	//DAB intensity of the analysis area is quantified and results are saved
 	getHistogramStats();
 	makeStatFromResults_HS ();
-	//print("/t" + v[10]);
 	getStats();
 	
 	// function making stats from ImageJ Results Table values. This will work for analyze particles
 	//I'll make another function like this for the histogram part
 
 	saveAs("PNG", output + File.separator + file + "_Hist.png");
-	saveAs("Results", output + File.separator + file + ".csv");
-	print("Processing: " + input + File.separator + file);
-	print("Saving to: " + output);
+	//saveAs("Results", output + File.separator + file + ".csv");
 	print(" ");
+	closeAllWindows();
 }
 
 						// --------------- tab functions ---------------//
+
+ function closeAllWindows () { 
+      while (nImages>0) {
+          selectImage(nImages);
+          close(); 
+      } 
+  } 
 
 function makeStatFromResults_AP () {
 	
@@ -326,15 +351,15 @@ function getHistogramStats(){
 	
 	if (is8bits) {
 	    for (i = 0; i < bins; i++) {
-	        if (i >= 0 && i < 40)
+	        if (i >= 0 && i < 60)
 	            Region4 = Region4 + counts[i];
-	        if (i > 60 && i < 90)
+	        if (i > 60 && i < 120)
 	            Region3 = Region3 + counts[i];
-	        if (i > 120 && i < 140)
+	        if (i > 120 && i < 180)
 	            Region2 = Region2 + counts[i];
-	        if (i > 180 && i < 190)
+	        if (i > 180 && i < 255)
 	            Region1 = Region1 + counts[i];
-	        if (i > 235 && i <= 256)
+	        if (i > 255 && i <= 256)
 	            Region0 = Region0 + counts[i];
 	    }
 	}
@@ -384,3 +409,11 @@ function draw (text) {
     Plot.addText(text, x, y);
     y += 0.08;
 }
+
+function saveTable () {
+	if (! isOpen(windowTabName)) {exit ("No Stat Results Table")}
+	selectWindow(windowTabName);
+	saveAs("Text", output + File.separator + windowTabName + ".txt");
+}
+
+

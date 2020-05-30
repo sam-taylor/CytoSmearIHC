@@ -42,6 +42,7 @@
 //modify these values as necessary to completely exclude background in the converted 8-bit images
 #@ Integer (label= "Cell Threshold Low", min=0, max=254, value=0) cellThreshLo
 #@ Integer (label= "Cell Threshold High (must be > low)", min=0, max=254, value=222) cellThreshHi
+#@ Boolean (label= "Use mean auto-threshold?", value=false) autoThresh
 
 // tab variables
 var windowTabName="Stat Results Table",nameOfStatTab="["+windowTabName+"]",label="",undoErease="";
@@ -90,8 +91,13 @@ function processFile(input, output, file) {
 	//here a threshold is applied to remove background pixels from the analysis
 	run("Duplicate...", " ");
 	run("8-bit");
-	setAutoThreshold("Default");
-	setThreshold(cellThreshLo, cellThreshHi); 
+	if (autoThresh){
+		run("Auto Threshold", "method=Mean show");
+		} 
+	else {
+		setAutoThreshold("Default");
+		setThreshold(cellThreshLo, cellThreshHi); 	
+		}
 	run("Convert to Mask");
 
 	//exclude clumped cells
@@ -120,14 +126,10 @@ function processFile(input, output, file) {
 
 	//DAB intensity of the analysis area is quantified and results are saved
 	getHistogramStats();
+	saveAs("PNG", output + File.separator + file + "_Hist.png");
 	makeStatFromResults_HS ();
 	getStats();
-	
-	// function making stats from ImageJ Results Table values. This will work for analyze particles
-	//I'll make another function like this for the histogram part
 
-	saveAs("PNG", output + File.separator + file + "_Hist.png");
-	//saveAs("Results", output + File.separator + file + ".csv");
 	print(" ");
 	closeAllWindows();
 }
@@ -415,5 +417,3 @@ function saveTable () {
 	selectWindow(windowTabName);
 	saveAs("Text", output + File.separator + windowTabName + ".txt");
 }
-
-
